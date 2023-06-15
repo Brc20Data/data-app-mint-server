@@ -30,7 +30,7 @@ class Hotmint extends BaseController
                     $res_data[$keys]['schedule'] =substr($vals['mint_progress'], 0, 5).'%';
                 }
             }
-            $total=1;
+            $total=10;
         }else{
             $limit =  ($page-1)*10;
             $redis = new Redis();
@@ -38,10 +38,10 @@ class Hotmint extends BaseController
             {
                 case 1:
                     $cache_key='crontab:mint:data';
-                    $mint_data = json_decode($redis->get($cache_key));
+                    $mint_data = json_decode($redis->get($cache_key),true);
                     foreach ($mint_data as $keys=>$vals){
-                        $res_data[$keys]['tick_name']=$vals['tick_name'];
-                        $data_vals = json_decode($redis->get('mint:brc-20:'.$vals['tick_name']),true);
+                        $res_data[$keys]['tick_name']=$vals['tick_value'];
+                        $data_vals = json_decode($redis->get('mint:brc-20:'.$vals['tick_value']),true);
                         $res_data[$keys]['deployment_time']=date('Y/m/d H:i:s',$data_vals['startTimestamp']);
                         $res_data[$keys]['holders_number']=$vals['times'];
                         $res_data[$keys]['cast_number']=$data_vals['mintAddress'];
@@ -49,7 +49,7 @@ class Hotmint extends BaseController
                             $res_data[$keys]['schedule']='100%';
                         }else{
                             $schedule = $data_vals['mintValue']/$data_vals['maxValue'];
-                            $res_data[$keys]['schedule']=substr($schedule, 0, 5).'%';
+                            $res_data[$keys]['schedule']=(substr($schedule, 0, 5)*100).'%';
                         }
                     }
                     $total=10;
