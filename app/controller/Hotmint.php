@@ -27,7 +27,11 @@ class Hotmint extends BaseController
                     $res_data[$keys]['tick_name'] = $vals['tick_value'];
                     $res_data[$keys]['deployment_time'] = date('Y/m/d H:i:s', $vals['start_timestamp']);
                     $res_data[$keys]['cast_number'] = $vals['mint_address'];
-                    $res_data[$keys]['schedule'] =substr($vals['mint_progress'], 0, 5).'%';
+                    if($vals['mint_progress']>'0.99'){
+                        $res_data[$keys]['schedule'] =substr($vals['mint_progress'], 0, 5).'%';
+                    }else{
+                        $res_data[$keys]['schedule'] =substr($vals['mint_progress'], 0, 5).'%';
+                    }
                 }
             }
             $total=10;
@@ -49,18 +53,22 @@ class Hotmint extends BaseController
                             $res_data[$keys]['schedule']='100%';
                         }else{
                             $schedule = $data_vals['mintValue']/$data_vals['maxValue'];
-                            $res_data[$keys]['schedule']=(substr($schedule, 0, 5)*100).'%';
+                            if($schedule>'0.99'){
+                                $res_data[$keys]['schedule']='100%';
+                            }else{
+                                $res_data[$keys]['schedule']=(substr($schedule, 0, 5)*100).'%';
+                            }
                         }
                     }
                     $total=10;
                     break;
                 case 2:
-                    $total_sql="select count(tick_value)as count_tick  from brc20_progress where max_value!=mint_value and max_value>0 and mint_value>0";
+                    $total_sql="select count(tick_value)as count_tick  from brc20_progress where max_value!=mint_value and max_value>0 and mint_value>0 and mint_value/max_value<'0.99' ";
                     $total_data = Db::query($total_sql);
                     $total=(int)$total_data[0]['count_tick'];
                     $sql="select (mint_value/max_value*100) as mint_progress,max_value,mint_value,tick_value,start_timestamp,mint_address 
                           from brc20_progress 
-                          where max_value!=mint_value and max_value>0 and mint_value>10  order by mint_progress desc 
+                          where max_value!=mint_value and max_value>0 and mint_value>10  and mint_value/max_value<'0.99' order by mint_progress desc 
                           limit $limit, 10";
                     $mint_data = Db::query($sql);
                     foreach ($mint_data as $keys=>$vals){
@@ -71,12 +79,12 @@ class Hotmint extends BaseController
                     }
                     break;
                 case 3:
-                    $total_sql="select count(tick_value)as count_tick  from brc20_progress where max_value=mint_value and max_value>0 and mint_value>0";
+                    $total_sql="select count(tick_value)as count_tick  from brc20_progress where  max_value>0 and mint_value>0 and mint_value/max_value>='0.99' ";
                     $total_data = Db::query($total_sql);
                     $total=(int)$total_data[0]['count_tick'];
                     $sql="select max_value,mint_value,tick_value,start_timestamp,mint_address 
                           from brc20_progress 
-                          where max_value=mint_value and max_value>0 and mint_value>0  
+                          where   max_value>0 and mint_value>0   and mint_value/max_value>='0.99'
                           limit $limit, 10";
                     $mint_data = Db::query($sql);
                     foreach ($mint_data as $keys=>$vals){
@@ -98,7 +106,11 @@ class Hotmint extends BaseController
                         $res_data[$keys]['tick_name']=$vals['tick_value'];
                         $res_data[$keys]['deployment_time']=date('Y/m/d H:i:s',$vals['start_timestamp']);
                         $res_data[$keys]['cast_number']=$vals['mint_address'];
-                        $res_data[$keys]['schedule']=substr($vals['mint_progress'], 0, 5).'%';
+                        if($vals['mint_progress']>='99'){
+                            $res_data[$keys]['schedule']='100%';
+                        }else {
+                            $res_data[$keys]['schedule'] = substr($vals['mint_progress'], 0, 5) . '%';
+                        }
                     }
                     break;
                 default:
